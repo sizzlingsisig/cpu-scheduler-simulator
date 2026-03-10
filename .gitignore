@@ -1,0 +1,32 @@
+# Build artifacts
+schedsim
+*.o
+*.out
+*.obj
+
+# Dependency files
+*.d
+
+# Editor/IDE files
+*.swp
+*.swo
+*.bak
+*.tmp
+*.vscode/
+*.idea/
+*.DS_Store
+
+# OS files
+Thumbs.db
+
+# Test outputs
+/tests/*.log
+/tests/*.out
+
+# Coverage and debug
+*.gcda
+*.gcno
+*.gcov
+
+# Ignore binaries in obj/
+obj/
