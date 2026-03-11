@@ -23,7 +23,6 @@ typedef struct {
 } Process;
 
 // Function prototypes
-// Function prototypes
 void init_process(Process* p, const char* pid, int at, int bt);
 Process* parse_workload_string(const char* input, int* count);
 Process* parse_workload_file(const char* filename, int* count);
