@@ -3,6 +3,8 @@
 #include <string.h>
 #include <getopt.h>
 #include "process.h"
+#include "scheduler.h"
+#include "metrics.h"
 
 // TODO: Phase 3/4/5 - Simulation loop and algorithm selection
 // TODO: Phase 6 - Metrics calculation and reporting
@@ -76,25 +78,6 @@ static Process *load_processes(const Args *args, int *num_procs) {
     return NULL;
 }
 
-// Print a debug summary of each parsed process.
-static void print_processes(const Process *procs, int num_procs) {
-    printf("Parsed %d processes:\n", num_procs);
-    for (int i = 0; i < num_procs; i++) {
-        printf("  pid: %s\n",            procs[i].pid);
-        printf("  arrival_time: %d\n",   procs[i].arrival_time);
-        printf("  burst_time: %d\n",     procs[i].burst_time);
-        printf("  remaining_time: %d\n", procs[i].remaining_time);
-        printf("  start_time: %d\n",     procs[i].start_time);
-        printf("  finish_time: %d\n",    procs[i].finish_time);
-        printf("  priority: %d\n",       procs[i].priority);
-        printf("  allotment_used: %d\n", procs[i].allotment_used);
-        printf("  turnaround_time: %d\n",procs[i].turnaround_time);
-        printf("  waiting_time: %d\n",   procs[i].waiting_time);
-        printf("  response_time: %d\n",  procs[i].response_time);
-        printf("---\n");
-    }
-}
-
 // Free all heap memory owned by args and the process array.
 static void cleanup(Args *args, Process *procs) {
     free(procs);
@@ -112,7 +95,78 @@ int main(int argc, char *argv[]) {
     if (!procs)
         return 1;
 
-    print_processes(procs, num_procs);
+    SchedulerFunc scheduler_func = NULL;
+    if (strcmp(args.algorithm, "FCFS") == 0) {
+        scheduler_func = fcfs_next_process;
+    } else if (strcmp(args.algorithm, "SJF") == 0) {
+        scheduler_func = sjf_next_process;
+    } else {
+        fprintf(stderr, "Unknown or unspecified algorithm: %s\n", args.algorithm);
+        cleanup(&args, procs);
+        return 1;
+    }
+
+    SchedulerState state;
+    init_scheduler_state(&state, procs, num_procs);
+
+    int completed = 0;
+    Process *current_running = NULL;
+
+    while (completed < num_procs) {
+        // Handle arrivals
+        for (int i = 0; i < num_procs; i++) {
+            if (procs[i].state == STATE_NOT_ARRIVED && procs[i].arrival_time <= state.current_time) {
+                procs[i].state = STATE_READY;
+            }
+        }
+
+        // If a process is running, let it run
+        if (current_running != NULL) {
+            current_running->remaining_time--;
+            
+            // Check completion
+            if (current_running->remaining_time == 0) {
+                current_running->state = STATE_FINISHED;
+                current_running->finish_time = state.current_time;
+                current_running->turnaround_time = current_running->finish_time - current_running->arrival_time;
+                current_running->waiting_time = current_running->turnaround_time - current_running->burst_time;
+                completed++;
+                current_running = NULL;
+            }
+        }
+
+        // Dispatch next process if CPU is idle
+        while (current_running == NULL) {
+            current_running = scheduler_func(&state);
+            if (current_running != NULL) {
+                current_running->state = STATE_RUNNING;
+                if (current_running->start_time == -1) {
+                    current_running->start_time = state.current_time;
+                    current_running->response_time = current_running->start_time - current_running->arrival_time;
+                }
+                
+                // If it was just dispatched, we evaluate if it has 0 burst time (edge case)
+                if (current_running->remaining_time == 0) {
+                     current_running->state = STATE_FINISHED;
+                     current_running->finish_time = state.current_time;
+                     current_running->turnaround_time = current_running->finish_time - current_running->arrival_time;
+                     current_running->waiting_time = current_running->turnaround_time - current_running->burst_time;
+                     completed++;
+                     current_running = NULL;
+                } else {
+                     break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (completed < num_procs) {
+            state.current_time++;
+        }
+    }
+
+    print_metrics_table(procs, num_procs);
 
     cleanup(&args, procs);
     return 0;
