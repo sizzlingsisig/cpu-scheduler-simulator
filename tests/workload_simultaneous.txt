@@ -1,0 +1,6 @@
+# All processes arrive at t=0
+# FCFS order: A -> B -> C
+# Expected FCFS TT: A=5, B=15, C=30 | Avg TT = 16.67
+A 0 5
+B 0 10
+C 0 15
