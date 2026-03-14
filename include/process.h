@@ -37,6 +37,11 @@ void init_process(Process* p, const char* pid, int at, int bt);
 Process* parse_workload_string(const char* input, int* count);
 Process* parse_workload_file(const char* filename, int* count);
 
+// State transition helpers
+void process_start(Process *p, int current_time);
+void process_tick(Process *p);
+void process_finish(Process *p, int current_time);
+
 // TODO: Phase 6 - Metrics calculation helpers
 // TODO: Phase 7 - Memory management docs
 // TODO: Phase 5 - Extend struct for MLFQ if needed
