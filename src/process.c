@@ -17,6 +17,7 @@ void init_process(Process* process, const char* pid, int at, int bt) {
 	process->turnaround_time = 0;
 	process->waiting_time = 0;
 	process->response_time = 0;
+	process->state = STATE_NOT_ARRIVED;
 }
 
 // Count the number of processes encoded in an inline workload string.

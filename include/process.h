@@ -3,6 +3,13 @@
 
 #define MAX_PID_LEN 16
 
+typedef enum {
+    STATE_NOT_ARRIVED = 0,
+    STATE_READY,
+    STATE_RUNNING,
+    STATE_FINISHED
+} ProcessState;
+
 typedef struct {
     // Accepted inputs
     char pid[MAX_PID_LEN];
@@ -20,6 +27,9 @@ typedef struct {
     int turnaround_time;
     int waiting_time;
     int response_time;
+    
+    // Internal state
+    ProcessState state;
 } Process;
 
 // Function prototypes
