@@ -17,12 +17,14 @@ typedef enum {
     OPT_INPUT     = 'i',
     OPT_QUANTUM   = 'q',
     OPT_COMPARE   = 1,
+    OPT_MLFQ_CONFIG = 2,
 } OptKey;
 
 typedef struct {
     char algorithm[16];
     char *processes_str;
     char *input_file;
+    char *mlfq_config;
     int quantum;
     int compare_mode;
 } Args;
@@ -36,6 +38,7 @@ static int parse_args(int argc, char *argv[], Args *args) {
         {"input",     required_argument, 0, OPT_INPUT    },
         {"quantum",   required_argument, 0, OPT_QUANTUM  },
         {"compare",   no_argument,       0, OPT_COMPARE  },
+        {"mlfq-config", required_argument, 0, OPT_MLFQ_CONFIG},
         {0, 0, 0, 0}
     };
 
@@ -58,6 +61,9 @@ static int parse_args(int argc, char *argv[], Args *args) {
                 break;
             case OPT_COMPARE:
                 args->compare_mode = 1;
+                break;
+            case OPT_MLFQ_CONFIG:
+                args->mlfq_config = strdup(optarg);
                 break;
             default:
                 fprintf(stderr, "Unknown option.\n");
@@ -84,6 +90,7 @@ static void cleanup(Args *args, Process *procs) {
     free(procs);
     free(args->processes_str);
     free(args->input_file);
+    free(args->mlfq_config);
 }
 
 int main(int argc, char *argv[]) {
