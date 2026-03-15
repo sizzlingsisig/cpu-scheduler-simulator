@@ -17,6 +17,7 @@ void init_process(Process* process, const char* pid, int at, int bt) {
 	process->turnaround_time = 0;
 	process->waiting_time = 0;
 	process->response_time = 0;
+	process->state = STATE_NOT_ARRIVED;
 }
 
 // Count the number of processes encoded in an inline workload string.
@@ -94,5 +95,26 @@ Process* parse_workload_file(const char* filename, int* count) {
     fclose(fp);
     *count = n;
     return procs;
+}
+
+void process_start(Process *p, int current_time) {
+    if (p->start_time == -1) {
+        p->start_time = current_time;
+        p->response_time = p->start_time - p->arrival_time;
+    }
+    p->state = STATE_RUNNING;
+}
+
+void process_tick(Process *p) {
+    if (p->remaining_time > 0) {
+        p->remaining_time--;
+    }
+}
+
+void process_finish(Process *p, int current_time) {
+    p->state = STATE_FINISHED;
+    p->finish_time = current_time;
+    p->turnaround_time = p->finish_time - p->arrival_time;
+    p->waiting_time = p->turnaround_time - p->burst_time;
 }
 

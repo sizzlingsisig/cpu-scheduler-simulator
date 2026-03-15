@@ -3,6 +3,9 @@
 #include <string.h>
 #include <getopt.h>
 #include "process.h"
+#include "scheduler.h"
+#include "metrics.h"
+#include "policy.h"
 
 // TODO: Phase 3/4/5 - Simulation loop and algorithm selection
 // TODO: Phase 6 - Metrics calculation and reporting
@@ -14,12 +17,14 @@ typedef enum {
     OPT_INPUT     = 'i',
     OPT_QUANTUM   = 'q',
     OPT_COMPARE   = 1,
+    OPT_MLFQ_CONFIG = 2,
 } OptKey;
 
 typedef struct {
     char algorithm[16];
     char *processes_str;
     char *input_file;
+    char *mlfq_config;
     int quantum;
     int compare_mode;
 } Args;
@@ -33,6 +38,7 @@ static int parse_args(int argc, char *argv[], Args *args) {
         {"input",     required_argument, 0, OPT_INPUT    },
         {"quantum",   required_argument, 0, OPT_QUANTUM  },
         {"compare",   no_argument,       0, OPT_COMPARE  },
+        {"mlfq-config", required_argument, 0, OPT_MLFQ_CONFIG},
         {0, 0, 0, 0}
     };
 
@@ -56,6 +62,9 @@ static int parse_args(int argc, char *argv[], Args *args) {
             case OPT_COMPARE:
                 args->compare_mode = 1;
                 break;
+            case OPT_MLFQ_CONFIG:
+                args->mlfq_config = strdup(optarg);
+                break;
             default:
                 fprintf(stderr, "Unknown option.\n");
                 return 1;
@@ -76,30 +85,12 @@ static Process *load_processes(const Args *args, int *num_procs) {
     return NULL;
 }
 
-// Print a debug summary of each parsed process.
-static void print_processes(const Process *procs, int num_procs) {
-    printf("Parsed %d processes:\n", num_procs);
-    for (int i = 0; i < num_procs; i++) {
-        printf("  pid: %s\n",            procs[i].pid);
-        printf("  arrival_time: %d\n",   procs[i].arrival_time);
-        printf("  burst_time: %d\n",     procs[i].burst_time);
-        printf("  remaining_time: %d\n", procs[i].remaining_time);
-        printf("  start_time: %d\n",     procs[i].start_time);
-        printf("  finish_time: %d\n",    procs[i].finish_time);
-        printf("  priority: %d\n",       procs[i].priority);
-        printf("  allotment_used: %d\n", procs[i].allotment_used);
-        printf("  turnaround_time: %d\n",procs[i].turnaround_time);
-        printf("  waiting_time: %d\n",   procs[i].waiting_time);
-        printf("  response_time: %d\n",  procs[i].response_time);
-        printf("---\n");
-    }
-}
-
 // Free all heap memory owned by args and the process array.
 static void cleanup(Args *args, Process *procs) {
     free(procs);
     free(args->processes_str);
     free(args->input_file);
+    free(args->mlfq_config);
 }
 
 int main(int argc, char *argv[]) {
@@ -112,7 +103,19 @@ int main(int argc, char *argv[]) {
     if (!procs)
         return 1;
 
-    print_processes(procs, num_procs);
+    SchedulerPolicy *policy = get_policy_by_name(args.algorithm);
+    if (!policy) {
+        fprintf(stderr, "Unknown or unspecified algorithm: %s\n", args.algorithm);
+        cleanup(&args, procs);
+        return 1;
+    }
+
+    SchedulerState state;
+    init_scheduler_state(&state, procs, num_procs);
+
+    run_simulation(&state, policy);
+
+    print_metrics_table(procs, num_procs);
 
     cleanup(&args, procs);
     return 0;

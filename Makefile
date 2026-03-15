@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -Iinclude
 SRC_DIR = src
-SRCS = $(wildcard $(SRC_DIR)/*.c)
+SRCS = $(shell find $(SRC_DIR) -name "*.c")
 
 # Target: all
 # Description: Compile the simulator
