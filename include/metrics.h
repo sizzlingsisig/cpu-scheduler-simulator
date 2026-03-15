@@ -4,6 +4,6 @@
 #include "process.h"
 
 // Calculate and print metrics table and averages for a set of processes.
-void print_metrics_table(Process *procs, int num_procs);
+void print_metrics_table(Process *procs, int num_procs, int context_switches);
 
 #endif

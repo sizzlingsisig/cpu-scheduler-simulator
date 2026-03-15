@@ -12,13 +12,15 @@ void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) 
 
 void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
     int completed = 0;
-    Process *current_running = NULL;
+    state->running_process = NULL;
 
     if (policy->on_init != NULL) {
         policy->on_init(state);
     }
 
     while (completed < state->num_processes) {
+        Process *previous_running = state->running_process;
+
         // 1. Handle arrivals
         for (int i = 0; i < state->num_processes; i++) {
             if (state->processes[i].state == STATE_NOT_ARRIVED && 
@@ -30,43 +32,47 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
             }
         }
 
-        // 2. Process currently running task
-        if (current_running != NULL) {
-            process_tick(current_running);
-            if (policy->on_tick != NULL) {
-                policy->on_tick(state, &current_running); // Pass address so tick can preempt by setting to NULL
-            }
-            
-            if (current_running != NULL && current_running->remaining_time == 0) {
-                process_finish(current_running, state->current_time);
-                completed++;
-                current_running = NULL;
-            }
+        // 2. Check for preemption from on_arrival
+        if (previous_running != NULL && state->running_process == NULL && previous_running->state == STATE_RUNNING) {
+            previous_running->state = STATE_READY;
+            state->context_switches++;
         }
 
         // 3. Dispatch next process if CPU is idle
-        // (Note: This is non-preemptive logic for Phase 3)
-        while (current_running == NULL) {
+        if (state->running_process == NULL) {
             if (policy->next_process != NULL) {
-                current_running = policy->next_process(state);
+                state->running_process = policy->next_process(state);
             }
-            if (current_running != NULL) {
-                process_start(current_running, state->current_time);
-                
-                // Edge case: process with 0 burst time finishes immediately
-                if (current_running->remaining_time == 0) {
-                    process_finish(current_running, state->current_time);
-                    completed++;
-                    current_running = NULL;
+            if (state->running_process != NULL) {
+                if (state->running_process != previous_running) {
+                    process_start(state->running_process, state->current_time);
                 } else {
-                    break;
+                    state->running_process->state = STATE_RUNNING;
                 }
-            } else {
-                break;
             }
         }
 
-        // 4. Advance time
+        // 4. Execute for one tick
+        if (state->running_process != NULL) {
+            process_tick(state->running_process);
+            
+            if (policy->on_tick != NULL) {
+                policy->on_tick(state, &state->running_process);
+                // If on_tick preempted by setting state->running_process = NULL
+                if (state->running_process == NULL && previous_running != NULL && previous_running->remaining_time > 0) {
+                    previous_running->state = STATE_READY;
+                    state->context_switches++;
+                }
+            }
+
+            if (state->running_process != NULL && state->running_process->remaining_time == 0) {
+                process_finish(state->running_process, state->current_time + 1);
+                completed++;
+                state->running_process = NULL;
+            }
+        }
+
+        // 5. Advance time
         if (completed < state->num_processes) {
             state->current_time++;
         }

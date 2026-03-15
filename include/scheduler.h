@@ -16,6 +16,9 @@ typedef struct {
     int context_switches;
     char *gantt_log;
     
+    // Track the currently running process
+    Process *running_process;
+    
     // Algorithm-specific state (e.g., quantums, queues)
     void *policy_state;
 } SchedulerState;

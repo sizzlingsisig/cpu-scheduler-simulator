@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_metrics_table(Process *procs, int num_procs) {
+void print_metrics_table(Process *procs, int num_procs, int context_switches) {
     if (num_procs == 0) return;
 
     printf("\n--- Scheduling Metrics ---\n");
@@ -29,5 +29,6 @@ void print_metrics_table(Process *procs, int num_procs) {
     printf("Average Turnaround Time (TT): %.2f\n", (float)total_tt / num_procs);
     printf("Average Waiting Time (WT):    %.2f\n", (float)total_wt / num_procs);
     printf("Average Response Time (RT):   %.2f\n", (float)total_rt / num_procs);
+    printf("Total Context Switches:       %d\n", context_switches);
     printf("--------------------------------------------\n");
 }

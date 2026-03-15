@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
     run_simulation(&state, policy);
 
-    print_metrics_table(procs, num_procs);
+    print_metrics_table(procs, num_procs, state.context_switches);
 
     cleanup(&args, procs);
     return 0;
