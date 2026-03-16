@@ -19,6 +19,9 @@ typedef struct {
     // Track the currently running process
     Process *running_process;
     
+    // Global parameters
+    int quantum;
+    
     // Algorithm-specific state (e.g., quantums, queues)
     void *policy_state;
 } SchedulerState;

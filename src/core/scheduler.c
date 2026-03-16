@@ -7,6 +7,8 @@ void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) 
     state->current_time = 0;
     state->context_switches = 0;
     state->gantt_log = NULL; // Phase 6
+    state->running_process = NULL;
+    state->quantum = 0;
     state->policy_state = NULL;
 }
 
@@ -19,9 +21,20 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
     }
 
     while (completed < state->num_processes) {
+        // 1. Handle completion and preemption from previous tick
+        if (state->running_process != NULL) {
+            if (state->running_process->remaining_time == 0) {
+                process_finish(state->running_process, state->current_time);
+                completed++;
+                state->running_process = NULL;
+            }
+        }
+
+        if (completed == state->num_processes) break;
+
         Process *previous_running = state->running_process;
 
-        // 1. Handle arrivals
+        // 2. Handle arrivals (New arrivals enter queue)
         for (int i = 0; i < state->num_processes; i++) {
             if (state->processes[i].state == STATE_NOT_ARRIVED && 
                 state->processes[i].arrival_time <= state->current_time) {
@@ -32,13 +45,19 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
             }
         }
 
-        // 2. Check for preemption from on_arrival
-        if (previous_running != NULL && state->running_process == NULL && previous_running->state == STATE_RUNNING) {
-            previous_running->state = STATE_READY;
-            state->context_switches++;
+        // 3. Handle clock tick for policies (e.g., RR quantum expiration)
+        // If the policy preempts, it sets state->running_process to NULL
+        if (state->running_process != NULL) {
+            if (policy->on_tick != NULL) {
+                policy->on_tick(state, &state->running_process);
+                if (state->running_process == NULL) {
+                    previous_running->state = STATE_READY;
+                    state->context_switches++;
+                }
+            }
         }
 
-        // 3. Dispatch next process if CPU is idle
+        // 4. Dispatch next process if CPU is idle
         if (state->running_process == NULL) {
             if (policy->next_process != NULL) {
                 state->running_process = policy->next_process(state);
@@ -52,30 +71,13 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
             }
         }
 
-        // 4. Execute for one tick
+        // 5. Execute for one tick
         if (state->running_process != NULL) {
             process_tick(state->running_process);
-            
-            if (policy->on_tick != NULL) {
-                policy->on_tick(state, &state->running_process);
-                // If on_tick preempted by setting state->running_process = NULL
-                if (state->running_process == NULL && previous_running != NULL && previous_running->remaining_time > 0) {
-                    previous_running->state = STATE_READY;
-                    state->context_switches++;
-                }
-            }
-
-            if (state->running_process != NULL && state->running_process->remaining_time == 0) {
-                process_finish(state->running_process, state->current_time + 1);
-                completed++;
-                state->running_process = NULL;
-            }
         }
 
-        // 5. Advance time
-        if (completed < state->num_processes) {
-            state->current_time++;
-        }
+        // 6. Advance time
+        state->current_time++;
     }
 
     if (policy->on_finish != NULL) {

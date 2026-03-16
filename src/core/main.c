@@ -112,6 +112,7 @@ int main(int argc, char *argv[]) {
 
     SchedulerState state;
     init_scheduler_state(&state, procs, num_procs);
+    state.quantum = args.quantum;
 
     run_simulation(&state, policy);
 
