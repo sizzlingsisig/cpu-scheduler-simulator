@@ -12,21 +12,25 @@
 typedef struct {
     Process *processes;
     int num_processes;
+    int quantum;
+} SchedulerConfig;
+
+typedef struct {
     int current_time;
-    int context_switches;
-    char *gantt_log;
-    
-    // Arrival tracking optimization
     int next_arrival_idx;
-    
-    // Track the currently running process
     Process *running_process;
     int preempt_requested;
-    
-    // Global parameters
-    int quantum;
-    
-    // Algorithm-specific state (e.g., quantums, queues)
+} SchedulerEngine;
+
+typedef struct {
+    int context_switches;
+    char *gantt_log;
+} SchedulerMetrics;
+
+typedef struct {
+    SchedulerConfig config;
+    SchedulerEngine engine;
+    SchedulerMetrics metrics;
     void *policy_state;
 } SchedulerState;
 

@@ -45,11 +45,11 @@ int main(int argc, char *argv[]) {
 
     SchedulerState state;
     init_scheduler_state(&state, procs, num_procs);
-    state.quantum = args.quantum;
+    state.config.quantum = args.quantum;
 
     run_simulation(&state, policy);
 
-    print_metrics_table(procs, num_procs, state.context_switches);
+    print_metrics_table(procs, num_procs, state.metrics.context_switches);
 
     free(procs);
     free_args(&args);

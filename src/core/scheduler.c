@@ -19,47 +19,50 @@ void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) 
     // Sort processes by arrival time initially
     qsort(procs, num_procs, sizeof(Process), compare_arrival_time);
 
-    state->processes = procs;
-    state->num_processes = num_procs;
-    state->current_time = 0;
-    state->context_switches = 0;
-    state->gantt_log = NULL; // Phase 6
-    state->next_arrival_idx = 0;
-    state->running_process = NULL;
-    state->preempt_requested = 0;
-    state->quantum = 0;
+    state->config.processes = procs;
+    state->config.num_processes = num_procs;
+    state->config.quantum = 0;
+
+    state->engine.current_time = 0;
+    state->engine.next_arrival_idx = 0;
+    state->engine.running_process = NULL;
+    state->engine.preempt_requested = 0;
+
+    state->metrics.context_switches = 0;
+    state->metrics.gantt_log = NULL; // Phase 6
+
     state->policy_state = NULL;
 }
 
 void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
     int completed = 0;
-    state->running_process = NULL;
+    state->engine.running_process = NULL;
 
     if (policy->on_init != NULL) {
         policy->on_init(state);
     }
 
-    while (completed < state->num_processes) {
+    while (completed < state->config.num_processes) {
         // 1. Handle completion and preemption from previous tick
-        if (state->running_process != NULL) {
-            if (state->running_process->remaining_time == 0) {
-                process_finish(state->running_process, state->current_time);
+        if (state->engine.running_process != NULL) {
+            if (state->engine.running_process->remaining_time == 0) {
+                process_finish(state->engine.running_process, state->engine.current_time);
                 completed++;
-                state->running_process = NULL;
+                state->engine.running_process = NULL;
             }
         }
 
-        if (completed == state->num_processes) break;
+        if (completed == state->config.num_processes) break;
 
         // 2. Handle arrivals (New arrivals enter queue)
-        while (state->next_arrival_idx < state->num_processes) {
-            Process *p = &state->processes[state->next_arrival_idx];
-            if (p->arrival_time <= state->current_time && p->state == STATE_NOT_ARRIVED) {
+        while (state->engine.next_arrival_idx < state->config.num_processes) {
+            Process *p = &state->config.processes[state->engine.next_arrival_idx];
+            if (p->arrival_time <= state->engine.current_time && p->state == STATE_NOT_ARRIVED) {
                 p->state = STATE_READY;
                 if (policy->on_arrival != NULL) {
                     policy->on_arrival(state, p);
                 }
-                state->next_arrival_idx++;
+                state->engine.next_arrival_idx++;
             } else {
                 // Since processes are sorted by arrival time, if the next process
                 // hasn't arrived, no subsequent process has arrived either.
@@ -68,13 +71,13 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
         }
 
         // 3. Handle clock tick for policies (e.g., RR quantum expiration)
-        if (state->running_process != NULL && policy->on_tick != NULL) {
-            policy->on_tick(state, &state->running_process);
+        if (state->engine.running_process != NULL && policy->on_tick != NULL) {
+            policy->on_tick(state, &state->engine.running_process);
         }
 
         // 4. Dispatch next process if CPU is idle or preemption was requested
-        if (state->running_process == NULL || state->preempt_requested) {
-            Process *previous = state->running_process;
+        if (state->engine.running_process == NULL || state->engine.preempt_requested) {
+            Process *previous = state->engine.running_process;
             
             // Temporarily mark as ready so policy can consider it
             if (previous != NULL) previous->state = STATE_READY;
@@ -86,29 +89,29 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
 
             if (next != previous) {
                 if (previous != NULL) {
-                    state->context_switches++;
+                    state->metrics.context_switches++;
                 }
-                state->running_process = next;
+                state->engine.running_process = next;
                 if (next != NULL) {
-                    process_start(next, state->current_time);
+                    process_start(next, state->engine.current_time);
                 }
             } else {
                 // Keep running the same process
-                state->running_process = previous;
+                state->engine.running_process = previous;
                 if (previous != NULL) {
                     previous->state = STATE_RUNNING;
                 }
             }
-            state->preempt_requested = 0;
+            state->engine.preempt_requested = 0;
         }
 
         // 5. Execute for one tick
-        if (state->running_process != NULL) {
-            process_tick(state->running_process);
+        if (state->engine.running_process != NULL) {
+            process_tick(state->engine.running_process);
         }
 
         // 6. Advance time
-        state->current_time++;
+        state->engine.current_time++;
     }
 
     if (policy->on_finish != NULL) {

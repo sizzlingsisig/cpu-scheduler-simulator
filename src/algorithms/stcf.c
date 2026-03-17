@@ -3,16 +3,16 @@
 
 static Process* stcf_next_process(SchedulerState *state) {
     Process *next = NULL;
-    for (int i = 0; i < state->num_processes; i++) {
-        if (state->processes[i].state == STATE_READY) {
-            if (next == NULL || state->processes[i].remaining_time < next->remaining_time) {
-                next = &state->processes[i];
-            } else if (state->processes[i].remaining_time == next->remaining_time) {
-                if (state->processes[i].arrival_time < next->arrival_time) {
-                    next = &state->processes[i];
-                } else if (state->processes[i].arrival_time == next->arrival_time) {
-                    if (strcmp(state->processes[i].pid, next->pid) < 0) {
-                        next = &state->processes[i];
+    for (int i = 0; i < state->config.num_processes; i++) {
+        if (state->config.processes[i].state == STATE_READY) {
+            if (next == NULL || state->config.processes[i].remaining_time < next->remaining_time) {
+                next = &state->config.processes[i];
+            } else if (state->config.processes[i].remaining_time == next->remaining_time) {
+                if (state->config.processes[i].arrival_time < next->arrival_time) {
+                    next = &state->config.processes[i];
+                } else if (state->config.processes[i].arrival_time == next->arrival_time) {
+                    if (strcmp(state->config.processes[i].pid, next->pid) < 0) {
+                        next = &state->config.processes[i];
                     }
                 }
             }
@@ -22,10 +22,10 @@ static Process* stcf_next_process(SchedulerState *state) {
 }
 
 static void stcf_on_arrival(SchedulerState *state, Process *p) {
-    if (state->running_process != NULL) {
-        if (p->remaining_time < state->running_process->remaining_time) {
+    if (state->engine.running_process != NULL) {
+        if (p->remaining_time < state->engine.running_process->remaining_time) {
             // Signal preemption: engine will handle state transitions
-            state->preempt_requested = 1;
+            state->engine.preempt_requested = 1;
         }
     }
 }
