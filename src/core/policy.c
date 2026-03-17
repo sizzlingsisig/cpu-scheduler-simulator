@@ -9,7 +9,12 @@ extern SchedulerPolicy SJF_Policy;
 extern SchedulerPolicy STCF_Policy;
 extern SchedulerPolicy RR_Policy;
 
-// Add new policies here as they are implemented
+/**
+ * get_policy_by_name acts as the Strategy Factory for the simulator.
+ * Centralizing the algorithm registry here prevents the main engine from 
+ * being coupled to any specific implementation, making it easy to add 
+ * new policies (like MLFQ) without modifying the orchestration logic.
+ */
 SchedulerPolicy* get_policy_by_name(const char *name) {
     if (strcmp(name, "FCFS") == 0) return &FCFS_Policy;
     if (strcmp(name, "SJF") == 0)  return &SJF_Policy;

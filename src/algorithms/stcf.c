@@ -1,6 +1,14 @@
 #include "scheduler.h"
 #include <string.h>
 
+/**
+ * STCF implements a greedy selection based on the shortest remaining time.
+ * This rule minimizes the average wait time by always prioritizing the 
+ * process that is closest to completion. 
+ * 
+ * The tie-breaker uses arrival_time first (for fairness) and then 
+ * lexicographical PID to ensure deterministic simulation results.
+ */
 static Process* stcf_next_process(SchedulerState *state) {
     Process *next = NULL;
     for (int i = 0; i < state->config.num_processes; i++) {
@@ -21,6 +29,12 @@ static Process* stcf_next_process(SchedulerState *state) {
     return next;
 }
 
+/**
+ * STCF provides preemption on every arrival event.
+ * If a new process arrives with a shorter remaining time than the 
+ * currently running process, the algorithm signals a preemption to 
+ * ensure the CPU is always assigned to the globally shortest task.
+ */
 static void stcf_on_arrival(SchedulerState *state, Process *p) {
     if (state->engine.running_process != NULL) {
         if (p->remaining_time < state->engine.running_process->remaining_time) {

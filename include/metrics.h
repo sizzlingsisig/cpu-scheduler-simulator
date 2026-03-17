@@ -3,7 +3,13 @@
 
 #include "process.h"
 
-// Calculate and print metrics table and averages for a set of processes.
+/**
+ * The metrics module is responsible for the post-simulation evaluation.
+ * By decoupling data collection (in scheduler.c) from reporting (here), 
+ * we allow the simulator to easily switch between different output formats 
+ * (ASCII tables, CSV for analysis, or Gantt logs) without modifying the 
+ * core engine.
+ */
 void print_metrics_table(Process *procs, int num_procs, int context_switches);
 
-#endif
+#endif // METRICS_H

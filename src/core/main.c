@@ -11,8 +11,12 @@
 // TODO: Phase 6 - Metrics calculation and reporting
 // TODO: Phase 7 - Memory management and cleanup
 
-// Load processes from the workload source specified in args.
-// Returns a heap-allocated array of Process structs, or NULL on failure.
+/**
+ * Dispatcher for workload loading.
+ * This function abstracts the choice between inline strings and workload 
+ * files, ensuring that the main execution loop doesn't need to know 
+ * the source of the process data.
+ */
 static Process *load_processes(const Args *args, int *num_procs) {
     if (args->processes_str) {
         return parse_workload_string(args->processes_str, num_procs);
@@ -23,6 +27,16 @@ static Process *load_processes(const Args *args, int *num_procs) {
     return NULL;
 }
 
+/**
+ * The master orchestrator for the SchedSim executable.
+ * 
+ * Execution flow:
+ * 1. Parse CLI arguments into a high-level Config.
+ * 2. Load the requested workload into a contiguous memory block.
+ * 3. Resolve the scheduling policy by its name string.
+ * 4. Initialize and run the discrete-event simulation engine.
+ * 5. Report results and relinquish all allocated resources.
+ */
 int main(int argc, char *argv[]) {
     Args args;
     if (parse_args(argc, argv, &args) != 0)
@@ -51,6 +65,8 @@ int main(int argc, char *argv[]) {
 
     print_metrics_table(procs, num_procs, state.metrics.context_switches);
 
+    // Final cleanup: procs was allocated by load_processes, 
+    // and args strings were allocated by parse_args.
     free(procs);
     free_args(&args);
     return 0;

@@ -9,12 +9,22 @@
 
 #include "process.h"
 
+/**
+ * SchedulerConfig defines the static inputs of the simulation.
+ * Separation from the runtime engine state allows for easier "compare mode"
+ * by passing the same configuration into different scheduling policies.
+ */
 typedef struct {
     Process *processes;
     int num_processes;
     int quantum;
 } SchedulerConfig;
 
+/**
+ * SchedulerEngine tracks the active progression of the simulation.
+ * These fields change every discrete tick and represent the "now"
+ * state of the CPU and the arriving process stream.
+ */
 typedef struct {
     int current_time;
     int next_arrival_idx;
@@ -22,11 +32,21 @@ typedef struct {
     int preempt_requested;
 } SchedulerEngine;
 
+/**
+ * SchedulerMetrics collects data points required for the final evaluation.
+ * Decoupling metrics from the engine logic allows for modular reporting
+ * and the future addition of complex data like Gantt charts.
+ */
 typedef struct {
     int context_switches;
     char *gantt_log;
 } SchedulerMetrics;
 
+/**
+ * SchedulerState is the root context object passed between core and algorithms.
+ * Using a nested structure keeps the object addressable while preventing
+ * a "flat list" of variables from becoming cognitively overwhelming.
+ */
 typedef struct {
     SchedulerConfig config;
     SchedulerEngine engine;
@@ -44,6 +64,12 @@ typedef Process* (*NextProcess)(SchedulerState *state);
 typedef void (*OnTick)(SchedulerState *state, Process **current);
 typedef void (*OnFinish)(SchedulerState *state); // Cleanup policy state
 
+/**
+ * SchedulerPolicy provides the abstract interface for all scheduling algorithms.
+ * By defining specific hooks (on_init, on_arrival, etc.), we enforce a strict
+ * Policy/Mechanism separation: the core engine manages the clock, while
+ * the policy only makes scheduling decisions.
+ */
 typedef struct SchedulerPolicy {
     const char *name;
     OnInit on_init;
@@ -53,13 +79,22 @@ typedef struct SchedulerPolicy {
     OnFinish on_finish;
 } SchedulerPolicy;
 
-// Initialize a generic scheduler state
+/**
+ * Prepares the simulation context by sorting processes and zeroing engine state.
+ */
 void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs);
 
-// Performs a single discrete time step in the simulation.
+/**
+ * Performs a single discrete time step in the simulation.
+ * This function orchestrates the sequence of completion, arrival, policy
+ * decision, and execution stages.
+ */
 void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *completed);
 
-// Runs the simulation until all processes are finished using the provided scheduler policy.
+/**
+ * The master simulation loop that drives the discrete time clock until
+ * all processes reach their termination state.
+ */
 void run_simulation(SchedulerState *state, SchedulerPolicy *policy);
 
-#endif
+#endif // SCHEDULER_H

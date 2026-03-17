@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * Outputs a formatted ASCII table representing the simulation results.
+ * This function calculates the averages on-the-fly to ensure that the 
+ * final report is derived from the latest state of the process array.
+ * 
+ * The field widths are fixed to ensure the table remains aligned for 
+ * typical PID lengths and simulation times.
+ */
 void print_metrics_table(Process *procs, int num_procs, int context_switches) {
     if (num_procs == 0) return;
 

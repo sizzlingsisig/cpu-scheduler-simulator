@@ -4,6 +4,11 @@
 #include <getopt.h>
 #include "parser.h"
 
+/**
+ * OptKey maps command-line characters to internal enum values.
+ * Using characters as enum values makes the switch statement highly 
+ * readable and directly maps to the 'getopt_long' short-flag string.
+ */
 typedef enum {
     OPT_ALGORITHM = 'a',
     OPT_PROCESSES = 'p',
@@ -13,6 +18,12 @@ typedef enum {
     OPT_MLFQ_CONFIG = 2,
 } OptKey;
 
+/**
+ * Implementation of CLI parsing using the GNU getopt_long library.
+ * This approach is chosen over manual argv scanning to robustly handle 
+ * edge cases like combined flags, space-separated vs equals-separated 
+ * arguments, and out-of-order flag placement.
+ */
 int parse_args(int argc, char *argv[], Args *args) {
     static struct option long_options[] = {
         {"algorithm", required_argument, 0, OPT_ALGORITHM},
@@ -27,6 +38,7 @@ int parse_args(int argc, char *argv[], Args *args) {
     memset(args, 0, sizeof(*args));
 
     int opt, option_index = 0;
+    // The colon suffix in the optstring indicates that the flag requires an argument.
     while ((opt = getopt_long(argc, argv, "a:p:i:q:", long_options, &option_index)) != -1) {
         switch ((OptKey)opt) {
             case OPT_ALGORITHM:
@@ -55,6 +67,11 @@ int parse_args(int argc, char *argv[], Args *args) {
     return 0;
 }
 
+/**
+ * Centralized destructor for the Args struct.
+ * Using strdup() in parse_args necessitates this function to ensure 
+ * that memory ownership is correctly relinquished before program exit.
+ */
 void free_args(Args *args) {
     free(args->processes_str);
     free(args->input_file);
