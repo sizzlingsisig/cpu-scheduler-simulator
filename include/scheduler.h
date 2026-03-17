@@ -21,6 +21,7 @@ typedef struct {
     
     // Track the currently running process
     Process *running_process;
+    int preempt_requested;
     
     // Global parameters
     int quantum;

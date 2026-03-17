@@ -60,9 +60,9 @@ static void rr_on_tick(SchedulerState *state, Process **current) {
 
     rr->current_quantum--;
     if (rr->current_quantum <= 0 && (*current)->remaining_time > 0) {
-        // Preempt: add to back of queue
+        // Signal preemption: engine will handle state transitions
+        state->preempt_requested = 1;
         rr_enqueue(rr, *current);
-        *current = NULL;
     }
 }
 

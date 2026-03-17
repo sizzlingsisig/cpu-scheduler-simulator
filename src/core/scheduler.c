@@ -26,6 +26,7 @@ void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) 
     state->gantt_log = NULL; // Phase 6
     state->next_arrival_idx = 0;
     state->running_process = NULL;
+    state->preempt_requested = 0;
     state->quantum = 0;
     state->policy_state = NULL;
 }
@@ -50,8 +51,6 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
 
         if (completed == state->num_processes) break;
 
-        Process *previous_running = state->running_process;
-
         // 2. Handle arrivals (New arrivals enter queue)
         while (state->next_arrival_idx < state->num_processes) {
             Process *p = &state->processes[state->next_arrival_idx];
@@ -69,29 +68,38 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
         }
 
         // 3. Handle clock tick for policies (e.g., RR quantum expiration)
-        // If the policy preempts, it sets state->running_process to NULL
-        if (state->running_process != NULL) {
-            if (policy->on_tick != NULL) {
-                policy->on_tick(state, &state->running_process);
-                if (state->running_process == NULL) {
-                    previous_running->state = STATE_READY;
-                    state->context_switches++;
-                }
-            }
+        if (state->running_process != NULL && policy->on_tick != NULL) {
+            policy->on_tick(state, &state->running_process);
         }
 
-        // 4. Dispatch next process if CPU is idle
-        if (state->running_process == NULL) {
+        // 4. Dispatch next process if CPU is idle or preemption was requested
+        if (state->running_process == NULL || state->preempt_requested) {
+            Process *previous = state->running_process;
+            
+            // Temporarily mark as ready so policy can consider it
+            if (previous != NULL) previous->state = STATE_READY;
+            
+            Process *next = NULL;
             if (policy->next_process != NULL) {
-                state->running_process = policy->next_process(state);
+                next = policy->next_process(state);
             }
-            if (state->running_process != NULL) {
-                if (state->running_process != previous_running) {
-                    process_start(state->running_process, state->current_time);
-                } else {
-                    state->running_process->state = STATE_RUNNING;
+
+            if (next != previous) {
+                if (previous != NULL) {
+                    state->context_switches++;
+                }
+                state->running_process = next;
+                if (next != NULL) {
+                    process_start(next, state->current_time);
+                }
+            } else {
+                // Keep running the same process
+                state->running_process = previous;
+                if (previous != NULL) {
+                    previous->state = STATE_RUNNING;
                 }
             }
+            state->preempt_requested = 0;
         }
 
         // 5. Execute for one tick

@@ -24,8 +24,8 @@ static Process* stcf_next_process(SchedulerState *state) {
 static void stcf_on_arrival(SchedulerState *state, Process *p) {
     if (state->running_process != NULL) {
         if (p->remaining_time < state->running_process->remaining_time) {
-            // Preempt the current process
-            state->running_process = NULL;
+            // Signal preemption: engine will handle state transitions
+            state->preempt_requested = 1;
         }
     }
 }
