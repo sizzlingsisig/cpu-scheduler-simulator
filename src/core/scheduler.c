@@ -1,12 +1,30 @@
 #include "scheduler.h"
 #include <stdlib.h>
 
+// Helper to sort processes by arrival time
+static int compare_arrival_time(const void *a, const void *b) {
+    const Process *p1 = (const Process *)a;
+    const Process *p2 = (const Process *)b;
+    
+    // Sort by arrival time primarily
+    if (p1->arrival_time != p2->arrival_time) {
+        return p1->arrival_time - p2->arrival_time;
+    }
+    // Tie-breaker: sort by PID lexicographically to ensure determinism
+    // Assuming PID format is typically single letter or small strings
+    return p1->pid[0] - p2->pid[0]; 
+}
+
 void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) {
+    // Sort processes by arrival time initially
+    qsort(procs, num_procs, sizeof(Process), compare_arrival_time);
+
     state->processes = procs;
     state->num_processes = num_procs;
     state->current_time = 0;
     state->context_switches = 0;
     state->gantt_log = NULL; // Phase 6
+    state->next_arrival_idx = 0;
     state->running_process = NULL;
     state->quantum = 0;
     state->policy_state = NULL;
@@ -35,13 +53,18 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
         Process *previous_running = state->running_process;
 
         // 2. Handle arrivals (New arrivals enter queue)
-        for (int i = 0; i < state->num_processes; i++) {
-            if (state->processes[i].state == STATE_NOT_ARRIVED && 
-                state->processes[i].arrival_time <= state->current_time) {
-                state->processes[i].state = STATE_READY;
+        while (state->next_arrival_idx < state->num_processes) {
+            Process *p = &state->processes[state->next_arrival_idx];
+            if (p->arrival_time <= state->current_time && p->state == STATE_NOT_ARRIVED) {
+                p->state = STATE_READY;
                 if (policy->on_arrival != NULL) {
-                    policy->on_arrival(state, &state->processes[i]);
+                    policy->on_arrival(state, p);
                 }
+                state->next_arrival_idx++;
+            } else {
+                // Since processes are sorted by arrival time, if the next process
+                // hasn't arrived, no subsequent process has arrived either.
+                break;
             }
         }
 

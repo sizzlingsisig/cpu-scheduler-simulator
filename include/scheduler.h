@@ -16,6 +16,9 @@ typedef struct {
     int context_switches;
     char *gantt_log;
     
+    // Arrival tracking optimization
+    int next_arrival_idx;
+    
     // Track the currently running process
     Process *running_process;
     
