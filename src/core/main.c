@@ -61,6 +61,9 @@ int main(int argc, char *argv[]) {
     init_scheduler_state(&state, procs, num_procs);
     state.config.quantum = args.quantum;
 
+    // Parse MLFQ config from args and store it in SchedulerConfig
+    parse_mlfq_config(args.mlfq_config, &state.config.mlfq_config);
+
     run_simulation(&state, policy);
 
     print_metrics_table(procs, num_procs, state.metrics.context_switches);

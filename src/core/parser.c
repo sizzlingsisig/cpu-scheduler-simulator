@@ -77,3 +77,56 @@ void free_args(Args *args) {
     free(args->input_file);
     free(args->mlfq_config);
 }
+
+void parse_mlfq_config(const char *config_str, MLFQConfig *config) {
+    if (!config) return;
+
+    // Default values
+    config->num_queues = 3;
+    config->quantums[0] = 2;
+    config->quantums[1] = 4;
+    config->quantums[2] = 8;
+    config->allotments[0] = 2;
+    config->allotments[1] = 4;
+    config->allotments[2] = 8;
+    config->boost_period = 50;
+
+    if (!config_str) return;
+
+    char *copy = strdup(config_str);
+    if (!copy) return;
+
+    char *saveptr1;
+    char *token = strtok_r(copy, ":", &saveptr1);
+    if (token) {
+        config->num_queues = atoi(token);
+        if (config->num_queues > MAX_MLFQ_QUEUES) {
+            config->num_queues = MAX_MLFQ_QUEUES;
+        }
+
+        token = strtok_r(NULL, ":", &saveptr1);
+        if (token) {
+            char *saveptr2;
+            char *q_tok = strtok_r(token, ",", &saveptr2);
+            for (int i = 0; i < config->num_queues && q_tok; i++) {
+                config->quantums[i] = atoi(q_tok);
+                q_tok = strtok_r(NULL, ",", &saveptr2);
+            }
+
+            token = strtok_r(NULL, ":", &saveptr1);
+            if (token) {
+                char *a_tok = strtok_r(token, ",", &saveptr2);
+                for (int i = 0; i < config->num_queues && a_tok; i++) {
+                    config->allotments[i] = atoi(a_tok);
+                    a_tok = strtok_r(NULL, ",", &saveptr2);
+                }
+
+                token = strtok_r(NULL, ":", &saveptr1);
+                if (token) {
+                    config->boost_period = atoi(token);
+                }
+            }
+        }
+    }
+    free(copy);
+}

@@ -9,6 +9,18 @@
 
 #include "process.h"
 
+#define MAX_MLFQ_QUEUES 10
+
+/**
+ * MLFQConfig defines the custom behavior of the Multi-Level Feedback Queue.
+ */
+typedef struct {
+    int num_queues;
+    int quantums[MAX_MLFQ_QUEUES];
+    int allotments[MAX_MLFQ_QUEUES];
+    int boost_period;
+} MLFQConfig;
+
 /**
  * SchedulerConfig defines the static inputs of the simulation.
  * Separation from the runtime engine state allows for easier "compare mode"
@@ -18,6 +30,7 @@ typedef struct {
     Process *processes;
     int num_processes;
     int quantum;
+    MLFQConfig mlfq_config;
 } SchedulerConfig;
 
 /**
