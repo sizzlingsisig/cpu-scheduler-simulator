@@ -56,6 +56,9 @@ typedef struct SchedulerPolicy {
 // Initialize a generic scheduler state
 void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs);
 
+// Performs a single discrete time step in the simulation.
+void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *completed);
+
 // Runs the simulation until all processes are finished using the provided scheduler policy.
 void run_simulation(SchedulerState *state, SchedulerPolicy *policy);
 
