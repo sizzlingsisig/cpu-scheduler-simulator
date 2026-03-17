@@ -3,10 +3,10 @@
 
 static Process* fcfs_next_process(SchedulerState *state) {
     Process *next = NULL;
-    for (int i = 0; i < state->num_processes; i++) {
-        if (state->processes[i].state == STATE_READY) {
-            if (next == NULL || state->processes[i].arrival_time < next->arrival_time) {
-                next = &state->processes[i];
+    for (int i = 0; i < state->config.num_processes; i++) {
+        if (state->config.processes[i].state == STATE_READY) {
+            if (next == NULL || state->config.processes[i].arrival_time < next->arrival_time) {
+                next = &state->config.processes[i];
             }
         }
     }

@@ -3,7 +3,11 @@
 
 #include "scheduler.h"
 
-// Returns the policy struct for the given name, or NULL if not found.
+/**
+ * The policy module serves as the primary extension point of the simulator.
+ * Adding a new algorithm simply requires implementing the SchedulerPolicy 
+ * hooks and registering the new policy by name in policy.c.
+ */
 SchedulerPolicy* get_policy_by_name(const char *name);
 
-#endif
+#endif // POLICY_H
