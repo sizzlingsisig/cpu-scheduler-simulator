@@ -56,6 +56,11 @@ run_test "RR Basic (File)" "--algorithm=RR --quantum=2 --input=tests/workload_st
 run_test "RR Time Slicing (String)" "--algorithm=RR --quantum=1 --processes=A:0:3,B:0:3"
 run_test "RR Arrival at Expiry (File)" "--algorithm=RR --quantum=2 --input=tests/rr_edge_case.txt"
 
+# --- MLFQ Tests ---
+run_test "MLFQ Default Config (File)" "--algorithm=mlfq --input=tests/workload_mlfq.txt"
+run_test "MLFQ Custom Config (String)" "--algorithm=mlfq --mlfq-config=2:2,4:2,4:20 --processes=A:0:10,B:2:5"
+run_test "MLFQ Starvation Prevention (String)" "--algorithm=mlfq --processes=A:0:100,B:5:10,C:10:5"
+
 # --- Smoke Tests for Error Handling ---
 echo -n "Test: Invalid Algorithm... "
 ./schedsim --algorithm=INVALID --processes=A:0:1 > /dev/null 2>&1

@@ -9,6 +9,9 @@ extern SchedulerPolicy SJF_Policy;
 extern SchedulerPolicy STCF_Policy;
 extern SchedulerPolicy RR_Policy;
 
+// Phase 5 Schedulers
+extern SchedulerPolicy MLFQ_Policy;
+
 /**
  * get_policy_by_name acts as the Strategy Factory for the simulator.
  * Centralizing the algorithm registry here prevents the main engine from 
@@ -20,5 +23,6 @@ SchedulerPolicy* get_policy_by_name(const char *name) {
     if (strcmp(name, "SJF") == 0)  return &SJF_Policy;
     if (strcmp(name, "STCF") == 0) return &STCF_Policy;
     if (strcmp(name, "RR") == 0)    return &RR_Policy;
+    if (strcmp(name, "mlfq") == 0 || strcmp(name, "MLFQ") == 0) return &MLFQ_Policy;
     return NULL;
 }

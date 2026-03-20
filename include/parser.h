@@ -31,4 +31,13 @@ int parse_args(int argc, char *argv[], Args *args);
  */
 void free_args(Args *args);
 
+#include "scheduler.h"
+
+/**
+ * Parses the --mlfq-config string into an MLFQConfig structure.
+ * Expected format: <num_queues>:<quantum_list>:<allotment_list>:<boost_period>
+ * Example: 3:2,4,8:2,4,8:50
+ */
+void parse_mlfq_config(const char *config_str, MLFQConfig *config);
+
 #endif // PARSER_H
