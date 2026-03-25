@@ -1,5 +1,7 @@
 #include "scheduler.h"
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 /**
  * Sorting by arrival time is the foundational optimization for the engine.
@@ -43,6 +45,9 @@ void init_scheduler_state(SchedulerState *state, Process *procs, int num_procs) 
     state->metrics.gantt_log = NULL; 
 
     state->policy_state = NULL;
+    
+    // Initialize Gantt chart log
+    init_gantt_log(state);
 }
 
 // Simulation Step Helpers
@@ -141,7 +146,14 @@ void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *comple
         process_tick(state->engine.running_process);
     }
 
-    // 6. Clock Advance
+    // 6. Record Gantt chart entry
+    if (state->engine.running_process != NULL) {
+        append_gantt_entry(state, state->engine.running_process->pid);
+    } else {
+        append_gantt_entry(state, "-");
+    }
+
+    // 7. Clock Advance
     state->engine.current_time++;
 }
 
@@ -166,4 +178,69 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
     if (policy->on_finish != NULL) {
         policy->on_finish(state);
     }
+}
+
+// Gantt Chart Rendering Helpers
+
+/**
+ * Initializes the Gantt chart log as an empty string.
+ * Allocates initial memory for the log buffer.
+ */
+void init_gantt_log(SchedulerState *state) {
+    state->metrics.gantt_log = malloc(1);
+    if (state->metrics.gantt_log != NULL) {
+        state->metrics.gantt_log[0] = '\0';
+    }
+}
+
+/**
+ * Appends a single character entry to the Gantt chart log.
+ * Dynamically resizes the buffer as needed.
+ */
+void append_gantt_entry(SchedulerState *state, const char *entry) {
+    if (state->metrics.gantt_log == NULL) return;
+    
+    size_t current_len = strlen(state->metrics.gantt_log);
+    size_t entry_len = strlen(entry);
+    size_t new_len = current_len + entry_len + 1;
+    
+    state->metrics.gantt_log = realloc(state->metrics.gantt_log, new_len);
+    if (state->metrics.gantt_log != NULL) {
+        strcat(state->metrics.gantt_log, entry);
+    }
+}
+
+/**
+ * Renders the complete Gantt chart from the accumulated log.
+ * Prints a formatted ASCII timeline with time labels.
+ */
+void render_gantt_chart(SchedulerState *state) {
+    if (state->metrics.gantt_log == NULL || strlen(state->metrics.gantt_log) == 0) {
+        printf("No Gantt chart data available.\n");
+        return;
+    }
+    
+    printf("\n--- Gantt Chart ---\n");
+    
+    // Print time axis
+    printf("Time: ");
+    for (size_t i = 0; i < strlen(state->metrics.gantt_log); i++) {
+        printf("%zu ", i);
+    }
+    printf("\n");
+    
+    // Print process timeline
+    printf("CPU:  ");
+    for (size_t i = 0; state->metrics.gantt_log[i] != '\0'; i++) {
+        printf("%c ", state->metrics.gantt_log[i]);
+    }
+    printf("\n");
+    
+    // Print legend
+    printf("\nLegend:\n");
+    printf("- = CPU idle\n");
+    for (int i = 0; i < state->config.num_processes; i++) {
+        printf("%s = Process %s\n", state->config.processes[i].pid, state->config.processes[i].pid);
+    }
+    printf("-------------------\n");
 }

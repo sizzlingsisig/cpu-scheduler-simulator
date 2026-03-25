@@ -1,7 +1,6 @@
 // TODO: Phase 3 - Implement FCFS and SJF scheduling functions
 // TODO: Phase 4 - Implement STCF and RR scheduling functions
 // TODO: Phase 5 - Implement MLFQ scheduling functions
-// TODO: Phase 6 - Add Gantt chart rendering helpers
 // TODO: Phase 7 - Add cleanup and memory management helpers
 
 #ifndef SCHEDULER_H
@@ -109,5 +108,29 @@ void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *comple
  * all processes reach their termination state.
  */
 void run_simulation(SchedulerState *state, SchedulerPolicy *policy);
+
+/**
+ * Gantt chart rendering helpers
+ * These functions build and display ASCII Gantt charts showing
+ * the execution timeline of processes over time.
+ */
+
+/**
+ * Initializes the Gantt chart log with an empty string.
+ * Should be called during scheduler initialization.
+ */
+void init_gantt_log(SchedulerState *state);
+
+/**
+ * Appends a single time unit entry to the Gantt chart log.
+ * Use the process PID if running, or '-' for idle CPU.
+ */
+void append_gantt_entry(SchedulerState *state, const char *entry);
+
+/**
+ * Renders the complete Gantt chart from the accumulated log.
+ * Prints a formatted ASCII timeline showing process execution.
+ */
+void render_gantt_chart(SchedulerState *state);
 
 #endif // SCHEDULER_H

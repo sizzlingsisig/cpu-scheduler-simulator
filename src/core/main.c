@@ -66,11 +66,13 @@ int main(int argc, char *argv[]) {
 
     run_simulation(&state, policy);
 
+    render_gantt_chart(&state);
     print_metrics_table(procs, num_procs, state.metrics.context_switches);
 
     // Final cleanup: procs was allocated by load_processes, 
     // and args strings were allocated by parse_args.
     free(procs);
+    free(state.metrics.gantt_log);
     free_args(&args);
     return 0;
 }
