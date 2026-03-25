@@ -86,7 +86,23 @@ void process_tick(Process *p);
  */
 void process_finish(Process *p, int current_time);
 
-// TODO: Phase 6 - Metrics calculation helpers
+/**
+ * Metrics calculation helpers
+ * These inline functions centralize the calculation of scheduling metrics
+ * to ensure consistency and reusability across the codebase.
+ */
+static inline int calculate_turnaround_time(int finish_time, int arrival_time) {
+    return finish_time - arrival_time;
+}
+
+static inline int calculate_waiting_time(int turnaround_time, int burst_time) {
+    return turnaround_time - burst_time;
+}
+
+static inline int calculate_response_time(int start_time, int arrival_time) {
+    return start_time - arrival_time;
+}
+
 // TODO: Phase 7 - Memory management docs
 // TODO: Phase 5 - Extend struct for MLFQ if needed
 

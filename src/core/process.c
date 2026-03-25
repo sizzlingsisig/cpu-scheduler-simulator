@@ -130,7 +130,7 @@ Process* parse_workload_file(const char* filename, int* count) {
 void process_start(Process *p, int current_time) {
     if (p->start_time == -1) {
         p->start_time = current_time;
-        p->response_time = p->start_time - p->arrival_time;
+        p->response_time = calculate_response_time(p->start_time, p->arrival_time);
     }
     p->state = STATE_RUNNING;
 }
@@ -153,7 +153,7 @@ void process_tick(Process *p) {
 void process_finish(Process *p, int current_time) {
     p->state = STATE_FINISHED;
     p->finish_time = current_time;
-    p->turnaround_time = p->finish_time - p->arrival_time;
-    p->waiting_time = p->turnaround_time - p->burst_time;
+    p->turnaround_time = calculate_turnaround_time(p->finish_time, p->arrival_time);
+    p->waiting_time = calculate_waiting_time(p->turnaround_time, p->burst_time);
 }
 
