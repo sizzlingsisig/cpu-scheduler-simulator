@@ -1,0 +1,18 @@
+
+=== Gantt Chart ===
+Each char = 10 time units:
+[AAA][BBB][CCC][EEE][BBB][CCC][EEE][CCC][DDD][BBB][CCC][BBB][AAA][DDD][BBB][DDD][EEE][AAA][DDD][AAA][CCC][EEE][AAA][EEE][BBB][CCC][EEE][CCC][DDD][BBB][CCC][BBB][AAA][DDD][AAA][EEE][BBB][AAA][CCC][BBB][CCC][EEE][AAA][CCC][BBB][CCC][EEE][AAA][CCC][BBB][CCC][EEE][AAA][CCC][AAA][BBB][AAA][CCC][BBB][AAA][BBB][AAAA]
+Time: 0 10 20   30   40   50   70   80   90   100  120  130  140  150  170  180  190  200  220  230  240  250  270  280  290  300  320  330  340  350  370  380  390  400  420  430  440  450  460  470  480  490  500  510  520  530  540  550  560  570  580  590  600  610  620  630  640  650  660  680  700  710   780
+
+=== Metrics ===
+Process | AT  | BT  | FT  | TT  | WT  | RT  
+--------|-----|-----|-----|-----|-----|-----
+A       |   0 | 240 | 780 | 780 | 540 |   0 
+B       |  10 | 180 | 701 | 691 | 511 |   0 
+C       |  20 | 150 | 657 | 637 | 487 |   0 
+D       |  25 |  80 | 412 | 387 | 307 |   0 
+E       |  30 | 130 | 605 | 575 | 445 |   0 
+--------|-----|-----|-----|-----|-----|-----
+Average |     |     |     | 614 | 458 |   0 
+
+Convoy effect detected: Process A waited 540 time units

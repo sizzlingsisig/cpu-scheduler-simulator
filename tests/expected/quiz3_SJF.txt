@@ -1,0 +1,18 @@
+
+=== Gantt Chart ===
+Each char = 10 time units:
+[AAAA][DDDD][EEEE][CCCC][BBBB]
+Time: 0 240  320   450   600   780
+
+=== Metrics ===
+Process | AT  | BT  | FT  | TT  | WT  | RT  
+--------|-----|-----|-----|-----|-----|-----
+A       |   0 | 240 | 240 | 240 |   0 |   0 
+B       |  10 | 180 | 780 | 770 | 590 | 590 
+C       |  20 | 150 | 600 | 580 | 430 | 430 
+D       |  25 |  80 | 320 | 295 | 215 | 215 
+E       |  30 | 130 | 450 | 420 | 290 | 290 
+--------|-----|-----|-----|-----|-----|-----
+Average |     |     |     | 461 | 305 | 305 
+
+Convoy effect detected: Process B waited 590 time units

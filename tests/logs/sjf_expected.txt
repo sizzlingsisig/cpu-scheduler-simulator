@@ -1,0 +1,25 @@
+
+--- Gantt Chart ---
+Time: 0 1 2 3 4 5 6 7 8 9 
+CPU:  A A A A A A A A A A 
+
+Legend:
+- = CPU idle
+A = Process A
+-------------------
+
+--- Scheduling Metrics ---
+Process A:
+  Arrival Time:     0
+  Burst Time:       10
+  Finish Time:      10
+  Turnaround Time:  10 - 0 = 10
+  Waiting Time:     10 - 10 = 0
+  Response Time:    0 - 0 = 0
+
+--------------------------------------------
+Average Turnaround Time (TT): 10.00
+Average Waiting Time (WT):    0.00
+Average Response Time (RT):   0.00
+Total Context Switches:       0
+--------------------------------------------
