@@ -17,5 +17,10 @@ schedsim: $(SRCS)
 clean:
 	rm -f schedsim *.o
 
+# Target: test
+# Description: Run automated test suite
+test: schedsim
+	./tests/test_suite.sh
+
 # helper to prevent conflicts with files named 'all' or 'clean'
-.PHONY: all clean
+.PHONY: all clean test
