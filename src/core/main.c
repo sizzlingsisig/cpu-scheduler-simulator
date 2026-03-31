@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include "parser.h"
 #include "process.h"
 #include "scheduler.h"
@@ -30,20 +31,27 @@ static CompareResult run_algorithm(const Args *args, Process *procs, int num_pro
     CompareResult result;
     strncpy(result.algorithm, algorithm_name, sizeof(result.algorithm) - 1);
 
-    SchedulerPolicy *policy = get_policy_by_name(algorithm_name);
-    if (!policy) {
-        fprintf(stderr, "Unknown algorithm: %s\n", algorithm_name);
-        result.avg_tt = result.avg_wt = result.avg_rt = -1;
-        result.context_switches = -1;
-        return result;
-    }
-
     SchedulerState state;
     init_scheduler_state(&state, procs, num_procs);
     state.config.quantum = args->quantum;
     parse_mlfq_config(args->mlfq_config, &state.config.mlfq_config);
 
-    run_simulation(&state, policy);
+    if (strcasecmp(algorithm_name, "fcfs") == 0) {
+        schedule_fcfs(&state);
+    } else if (strcasecmp(algorithm_name, "sjf") == 0) {
+        schedule_sjf(&state);
+    } else if (strcasecmp(algorithm_name, "stcf") == 0) {
+        schedule_stcf(&state);
+    } else if (strcasecmp(algorithm_name, "rr") == 0) {
+        schedule_rr(&state, state.config.quantum);
+    } else if (strcasecmp(algorithm_name, "mlfq") == 0) {
+        schedule_mlfq(&state, &state.config.mlfq_config);
+    } else {
+        fprintf(stderr, "Unknown algorithm: %s\n", algorithm_name);
+        result.avg_tt = result.avg_wt = result.avg_rt = -1;
+        result.context_switches = -1;
+        return result;
+    }
 
     // Calculate averages
     int total_tt = 0, total_wt = 0, total_rt = 0;
@@ -143,14 +151,6 @@ int main(int argc, char *argv[]) {
         print_comparison_table(results, num_algorithms);
     } else {
         // Single algorithm mode
-        SchedulerPolicy *policy = get_policy_by_name(args.algorithm);
-        if (!policy) {
-            fprintf(stderr, "Unknown or unspecified algorithm: %s\n", args.algorithm);
-            free(procs);
-            free_args(&args);
-            return 1;
-        }
-
         SchedulerState state;
         init_scheduler_state(&state, procs, num_procs);
         state.config.quantum = args.quantum;
@@ -158,10 +158,25 @@ int main(int argc, char *argv[]) {
         // Parse MLFQ config from args and store it in SchedulerConfig
         parse_mlfq_config(args.mlfq_config, &state.config.mlfq_config);
 
-        run_simulation(&state, policy);
+        if (strcasecmp(args.algorithm, "fcfs") == 0) {
+            schedule_fcfs(&state);
+        } else if (strcasecmp(args.algorithm, "sjf") == 0) {
+            schedule_sjf(&state);
+        } else if (strcasecmp(args.algorithm, "stcf") == 0) {
+            schedule_stcf(&state);
+        } else if (strcasecmp(args.algorithm, "rr") == 0) {
+            schedule_rr(&state, state.config.quantum);
+        } else if (strcasecmp(args.algorithm, "mlfq") == 0) {
+            schedule_mlfq(&state, &state.config.mlfq_config);
+        } else {
+            fprintf(stderr, "Unknown or unspecified algorithm: %s\n", args.algorithm);
+            free(procs);
+            free_args(&args);
+            return 1;
+        }
 
         render_gantt_chart(&state);
-        print_metrics_table(procs, num_procs, state.metrics.context_switches);
+        print_metrics_table(procs, num_procs);
 
         cleanup_scheduler_state(&state);
     }

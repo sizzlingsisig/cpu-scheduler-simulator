@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "gantt.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -122,8 +123,10 @@ static void handle_dispatch(SchedulerState *state, SchedulerPolicy *policy) {
  * 1. Completion: Free the CPU.
  * 2. Arrival: New work enters the system.
  * 3. Tick: Policy evaluates current progress (e.g. quantum expiry).
- * 4. Dispatch: Decide what runs next.
+ * 4. Dispatch: Decide what runs next. If process has BT=0, finish immediately.
  * 5. Execute: Consume one time unit.
+ * 6. Completion: Catch processes that finished during this tick.
+ * 7. Clock: Advance time.
  */
 void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *completed) {
     // 1. Completion check
@@ -141,19 +144,26 @@ void step_simulation(SchedulerState *state, SchedulerPolicy *policy, int *comple
     // 4. Dispatch check
     handle_dispatch(state, policy);
 
+    // 4b. Handle BT=0 processes that complete immediately upon dispatch
+    if (state->engine.running_process != NULL && 
+        state->engine.running_process->remaining_time == 0) {
+        process_finish(state->engine.running_process, state->engine.current_time);
+        (*completed)++;
+        state->engine.running_process = NULL;
+        append_gantt_entry(state, "-");  // No Gantt entry for instant-complete
+        state->engine.current_time++;
+        return;
+    }
+
     // 5. Execution
     if (state->engine.running_process != NULL) {
         process_tick(state->engine.running_process);
-    }
-
-    // 6. Record Gantt chart entry
-    if (state->engine.running_process != NULL) {
         append_gantt_entry(state, state->engine.running_process->pid);
     } else {
         append_gantt_entry(state, "-");
     }
 
-    // 7. Clock Advance
+    // 6. Clock Advance
     state->engine.current_time++;
 }
 
@@ -177,88 +187,6 @@ void run_simulation(SchedulerState *state, SchedulerPolicy *policy) {
 
     if (policy->on_finish != NULL) {
         policy->on_finish(state);
-    }
-}
-
-// Gantt Chart Rendering Helpers
-
-/**
- * Initializes the Gantt chart log as an empty string.
- * Allocates initial memory for the log buffer.
- */
-void init_gantt_log(SchedulerState *state) {
-    state->metrics.gantt_log = malloc(1);
-    if (state->metrics.gantt_log != NULL) {
-        state->metrics.gantt_log[0] = '\0';
-    }
-}
-
-/**
- * Appends a single character entry to the Gantt chart log.
- * Dynamically resizes the buffer as needed.
- */
-void append_gantt_entry(SchedulerState *state, const char *entry) {
-    if (state->metrics.gantt_log == NULL) return;
-    
-    size_t current_len = strlen(state->metrics.gantt_log);
-    size_t entry_len = strlen(entry);
-    size_t new_len = current_len + entry_len + 1;
-    
-    state->metrics.gantt_log = realloc(state->metrics.gantt_log, new_len);
-    if (state->metrics.gantt_log != NULL) {
-        strcat(state->metrics.gantt_log, entry);
-    }
-}
-
-/**
- * Renders the complete Gantt chart from the accumulated log.
- * Prints a formatted ASCII timeline with time labels.
- */
-void render_gantt_chart(SchedulerState *state) {
-    if (state->metrics.gantt_log == NULL || strlen(state->metrics.gantt_log) == 0) {
-        printf("No Gantt chart data available.\n");
-        return;
-    }
-    
-    printf("\n--- Gantt Chart ---\n");
-    
-    // Print time axis
-    printf("Time: ");
-    for (size_t i = 0; i < strlen(state->metrics.gantt_log); i++) {
-        printf("%zu ", i);
-    }
-    printf("\n");
-    
-    // Print process timeline
-    printf("CPU:  ");
-    for (size_t i = 0; state->metrics.gantt_log[i] != '\0'; i++) {
-        printf("%c ", state->metrics.gantt_log[i]);
-    }
-    printf("\n");
-    
-    // Print legend
-    printf("\nLegend:\n");
-    printf("- = CPU idle\n");
-    for (int i = 0; i < state->config.num_processes; i++) {
-        printf("%s = Process %s\n", state->config.processes[i].pid, state->config.processes[i].pid);
-    }
-    printf("-------------------\n");
-}
-
-// ============================================================================
-// Cleanup and Memory Management Helpers (Phase 7)
-// ============================================================================
-
-/**
- * Cleans up the Gantt chart log memory.
- * Safe to call even if gantt_log is NULL.
- */
-void cleanup_gantt_log(SchedulerState *state) {
-    if (state == NULL) return;
-    
-    if (state->metrics.gantt_log != NULL) {
-        free(state->metrics.gantt_log);
-        state->metrics.gantt_log = NULL;
     }
 }
 

@@ -93,40 +93,36 @@ void parse_mlfq_config(const char *config_str, MLFQConfig *config) {
 
     if (!config_str) return;
 
-    char *copy = strdup(config_str);
-    if (!copy) return;
+    FILE* fp = fopen(config_str, "r");
+    if (!fp) {
+        fprintf(stderr, "Warning: Could not open MLFQ config file %s. Using defaults.\n", config_str);
+        return;
+    }
 
-    char *saveptr1;
-    char *token = strtok_r(copy, ":", &saveptr1);
-    if (token) {
-        config->num_queues = atoi(token);
-        if (config->num_queues > MAX_MLFQ_QUEUES) {
-            config->num_queues = MAX_MLFQ_QUEUES;
-        }
+    char line[256];
+    int queue_idx = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
 
-        token = strtok_r(NULL, ":", &saveptr1);
-        if (token) {
-            char *saveptr2;
-            char *q_tok = strtok_r(token, ",", &saveptr2);
-            for (int i = 0; i < config->num_queues && q_tok; i++) {
-                config->quantums[i] = atoi(q_tok);
-                q_tok = strtok_r(NULL, ",", &saveptr2);
+        char *token = strtok(line, " \t\n\r");
+        if (!token) continue;
+
+        if (strncmp(token, "Q", 1) == 0 && queue_idx < MAX_MLFQ_QUEUES) {
+            char *quantum_tok = strtok(NULL, " \t\n\r");
+            char *allot_tok = strtok(NULL, " \t\n\r");
+            if (quantum_tok && allot_tok) {
+                config->quantums[queue_idx] = atoi(quantum_tok);
+                config->allotments[queue_idx] = atoi(allot_tok);
+                queue_idx++;
             }
-
-            token = strtok_r(NULL, ":", &saveptr1);
-            if (token) {
-                char *a_tok = strtok_r(token, ",", &saveptr2);
-                for (int i = 0; i < config->num_queues && a_tok; i++) {
-                    config->allotments[i] = atoi(a_tok);
-                    a_tok = strtok_r(NULL, ",", &saveptr2);
-                }
-
-                token = strtok_r(NULL, ":", &saveptr1);
-                if (token) {
-                    config->boost_period = atoi(token);
-                }
+        } else if (strcmp(token, "BOOST_PERIOD") == 0) {
+            char *boost_tok = strtok(NULL, " \t\n\r");
+            if (boost_tok) {
+                config->boost_period = atoi(boost_tok);
             }
         }
     }
-    free(copy);
+    config->num_queues = queue_idx > 0 ? queue_idx : 3;
+
+    fclose(fp);
 }

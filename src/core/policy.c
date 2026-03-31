@@ -26,3 +26,30 @@ SchedulerPolicy* get_policy_by_name(const char *name) {
     if (strcmp(name, "mlfq") == 0 || strcmp(name, "MLFQ") == 0) return &MLFQ_Policy;
     return NULL;
 }
+
+int schedule_fcfs(SchedulerState *state) {
+    run_simulation(state, &FCFS_Policy);
+    return 0;
+}
+
+int schedule_sjf(SchedulerState *state) {
+    run_simulation(state, &SJF_Policy);
+    return 0;
+}
+
+int schedule_stcf(SchedulerState *state) {
+    run_simulation(state, &STCF_Policy);
+    return 0;
+}
+
+int schedule_rr(SchedulerState *state, int quantum) {
+    state->config.quantum = quantum;
+    run_simulation(state, &RR_Policy);
+    return 0;
+}
+
+int schedule_mlfq(SchedulerState *state, MLFQConfig *config) {
+    state->config.mlfq_config = *config;
+    run_simulation(state, &MLFQ_Policy);
+    return 0;
+}

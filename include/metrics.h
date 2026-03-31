@@ -10,6 +10,6 @@
  * (ASCII tables, CSV for analysis, or Gantt logs) without modifying the 
  * core engine.
  */
-void print_metrics_table(Process *procs, int num_procs, int context_switches);
+void print_metrics_table(Process *procs, int num_procs);
 
 #endif // METRICS_H

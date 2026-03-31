@@ -2,20 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/**
- * Outputs a formatted ASCII table representing the simulation results.
- * This function calculates the averages on-the-fly to ensure that the 
- * final report is derived from the latest state of the process array.
- * 
- * The field widths are fixed to ensure the table remains aligned for 
- * typical PID lengths and simulation times.
- */
-void print_metrics_table(Process *procs, int num_procs, int context_switches) {
+void calculate_metrics(Process *processes, int num_procs) {
+    for (int i = 0; i < num_procs; i++) {
+        processes[i].turnaround_time = processes[i].finish_time - processes[i].arrival_time;
+        processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+        processes[i].response_time = processes[i].start_time - processes[i].arrival_time;
+    }
+}
+
+void print_metrics_table(Process *procs, int num_procs) {
     if (num_procs == 0) return;
 
-    printf("\n--- Scheduling Metrics ---\n");
-    printf("%-5s %-5s %-5s %-5s %-5s %-5s %-5s\n", "PID", "AT", "BT", "FT", "TT", "WT", "RT");
-    printf("--------------------------------------------\n");
+    printf("\n=== Metrics ===\n");
+    printf("Process | AT  | BT  | FT  | TT  | WT  | RT  \n");
+    printf("--------|-----|-----|-----|-----|-----|-----\n");
 
     int total_tt = 0;
     int total_wt = 0;
@@ -23,7 +23,7 @@ void print_metrics_table(Process *procs, int num_procs, int context_switches) {
 
     for (int i = 0; i < num_procs; i++) {
         Process *p = &procs[i];
-        printf("%-5s %-5d %-5d %-5d %-5d %-5d %-5d\n",
+        printf("%-7s | %3d | %3d | %3d | %3d | %3d | %3d \n",
             p->pid, p->arrival_time, p->burst_time,
             p->finish_time, p->turnaround_time,
             p->waiting_time, p->response_time);
@@ -33,10 +33,18 @@ void print_metrics_table(Process *procs, int num_procs, int context_switches) {
         total_rt += p->response_time;
     }
 
-    printf("--------------------------------------------\n");
-    printf("Average Turnaround Time (TT): %.2f\n", (float)total_tt / num_procs);
-    printf("Average Waiting Time (WT):    %.2f\n", (float)total_wt / num_procs);
-    printf("Average Response Time (RT):   %.2f\n", (float)total_rt / num_procs);
-    printf("Total Context Switches:       %d\n", context_switches);
-    printf("--------------------------------------------\n");
+    printf("--------|-----|-----|-----|-----|-----|-----\n");
+    int avg_tt = total_tt / num_procs;
+    int avg_wt = total_wt / num_procs;
+    int avg_rt = total_rt / num_procs;
+    printf("Average |     |     |     | %3d | %3d | %3d \n", avg_tt, avg_wt, avg_rt);
+
+    for (int i = 0; i < num_procs; i++) {
+        Process *p = &procs[i];
+        // Identify convoy effect (long job blocking a short job)
+        if (p->waiting_time > 100 && p->waiting_time > p->burst_time) {
+            printf("\nConvoy effect detected: Process %s waited %d time units\n", p->pid, p->waiting_time);
+            break;
+        }
+    }
 }
