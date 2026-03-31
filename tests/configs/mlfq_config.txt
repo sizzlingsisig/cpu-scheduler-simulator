@@ -1,0 +1,14 @@
+# Multi-Level Feedback Queue Configuration
+# Format: QueueID TimeQuantum Allotment
+
+# High priority (interactive jobs)
+Q0 10 50
+
+# Medium priority (mixed workloads)
+Q1 30 150
+
+# Low priority (batch jobs) - FCFS
+Q2 -1 -1
+
+# Priority boost period
+BOOST_PERIOD 200

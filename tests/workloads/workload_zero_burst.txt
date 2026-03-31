@@ -1,0 +1,4 @@
+# Zero burst time processes
+A 0 0
+B 5 0
+C 10 0

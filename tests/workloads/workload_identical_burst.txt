@@ -1,0 +1,5 @@
+# All processes have same burst time
+# SJF should behave like FCFS (tie-break by arrival then PID)
+A 0 10
+B 0 10
+C 0 10

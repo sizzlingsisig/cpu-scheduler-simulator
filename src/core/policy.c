@@ -1,0 +1,55 @@
+#include "policy.h"
+#include <string.h>
+
+// Phase 3 Schedulers
+extern SchedulerPolicy FCFS_Policy;
+extern SchedulerPolicy SJF_Policy;
+
+// Phase 4 Schedulers
+extern SchedulerPolicy STCF_Policy;
+extern SchedulerPolicy RR_Policy;
+
+// Phase 5 Schedulers
+extern SchedulerPolicy MLFQ_Policy;
+
+/**
+ * get_policy_by_name acts as the Strategy Factory for the simulator.
+ * Centralizing the algorithm registry here prevents the main engine from 
+ * being coupled to any specific implementation, making it easy to add 
+ * new policies (like MLFQ) without modifying the orchestration logic.
+ */
+SchedulerPolicy* get_policy_by_name(const char *name) {
+    if (strcmp(name, "FCFS") == 0) return &FCFS_Policy;
+    if (strcmp(name, "SJF") == 0)  return &SJF_Policy;
+    if (strcmp(name, "STCF") == 0) return &STCF_Policy;
+    if (strcmp(name, "RR") == 0)    return &RR_Policy;
+    if (strcmp(name, "mlfq") == 0 || strcmp(name, "MLFQ") == 0) return &MLFQ_Policy;
+    return NULL;
+}
+
+int schedule_fcfs(SchedulerState *state) {
+    run_simulation(state, &FCFS_Policy);
+    return 0;
+}
+
+int schedule_sjf(SchedulerState *state) {
+    run_simulation(state, &SJF_Policy);
+    return 0;
+}
+
+int schedule_stcf(SchedulerState *state) {
+    run_simulation(state, &STCF_Policy);
+    return 0;
+}
+
+int schedule_rr(SchedulerState *state, int quantum) {
+    state->config.quantum = quantum;
+    run_simulation(state, &RR_Policy);
+    return 0;
+}
+
+int schedule_mlfq(SchedulerState *state, MLFQConfig *config) {
+    state->config.mlfq_config = *config;
+    run_simulation(state, &MLFQ_Policy);
+    return 0;
+}

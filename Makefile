@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -Iinclude
 SRC_DIR = src
-SRCS = $(wildcard $(SRC_DIR)/*.c)
+SRCS = $(shell find $(SRC_DIR) -name "*.c")
 
 # Target: all
 # Description: Compile the simulator
@@ -17,5 +17,10 @@ schedsim: $(SRCS)
 clean:
 	rm -f schedsim *.o
 
+# Target: test
+# Description: Run automated test suite
+test: schedsim
+	./tests/test_suite.sh
+
 # helper to prevent conflicts with files named 'all' or 'clean'
-.PHONY: all clean
+.PHONY: all clean test

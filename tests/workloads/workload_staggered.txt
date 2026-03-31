@@ -1,0 +1,5 @@
+# Processes arrive at different times — covers idle CPU gaps
+# A arrives first, B arrives while A is running, C arrives after A finishes
+A 0 10
+B 3 4
+C 15 6
