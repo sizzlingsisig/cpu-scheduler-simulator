@@ -4,7 +4,7 @@ A discrete-event CPU scheduling simulator built in C for CMSC 125 (Lab 2). This 
 
 ## Group Members
 
-- Christian Jolo G. Abarquez
+- Christian Hernia
 - Julo Bretana
 
 ## Features and Algorithms
