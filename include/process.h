@@ -103,7 +103,6 @@ static inline int calculate_response_time(int start_time, int arrival_time) {
     return start_time - arrival_time;
 }
 
-// TODO: Phase 7 - Memory management docs
 // TODO: Phase 5 - Extend struct for MLFQ if needed
 
 #endif // PROCESS_H

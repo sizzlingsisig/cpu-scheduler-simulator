@@ -244,3 +244,63 @@ void render_gantt_chart(SchedulerState *state) {
     }
     printf("-------------------\n");
 }
+
+// ============================================================================
+// Cleanup and Memory Management Helpers (Phase 7)
+// ============================================================================
+
+/**
+ * Cleans up the Gantt chart log memory.
+ * Safe to call even if gantt_log is NULL.
+ */
+void cleanup_gantt_log(SchedulerState *state) {
+    if (state == NULL) return;
+    
+    if (state->metrics.gantt_log != NULL) {
+        free(state->metrics.gantt_log);
+        state->metrics.gantt_log = NULL;
+    }
+}
+
+/**
+ * Cleans up all resources owned by the SchedulerState.
+ * This includes the Gantt chart log and any policy-specific state.
+ * The Process array is NOT freed, as it is externally owned.
+ * 
+ * Safe to call multiple times or with partially initialized state.
+ */
+void cleanup_scheduler_state(SchedulerState *state) {
+    if (state == NULL) return;
+    
+    // Clean up the Gantt chart log
+    cleanup_gantt_log(state);
+    
+    // Note: Policy state cleanup is handled by policy->on_finish() 
+    // during run_simulation(), so policy_state should already be NULL
+    // by the time this function is called. However, we defensively
+    // null it out in case the simulation was interrupted.
+    state->policy_state = NULL;
+    
+    // Zero out the engine and metrics to prevent dangling pointers
+    state->engine.running_process = NULL;
+    state->metrics.context_switches = 0;
+}
+
+/**
+ * Comprehensive cleanup function that handles both the SchedulerState
+ * and an optional Process array. This is the recommended cleanup path
+ * for typical use cases where the Process array is stack-allocated
+ * or needs to be freed by the cleanup function.
+ * 
+ * If procs is NULL, only the SchedulerState is cleaned up.
+ * Safe to call even if either parameter is NULL.
+ */
+void cleanup_simulation(SchedulerState *state, Process *procs) {
+    if (state != NULL) {
+        cleanup_scheduler_state(state);
+    }
+    
+    if (procs != NULL) {
+        free(procs);
+    }
+}

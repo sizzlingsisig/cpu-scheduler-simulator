@@ -1,8 +1,3 @@
-// TODO: Phase 3 - Implement FCFS and SJF scheduling functions
-// TODO: Phase 4 - Implement STCF and RR scheduling functions
-// TODO: Phase 5 - Implement MLFQ scheduling functions
-// TODO: Phase 7 - Add cleanup and memory management helpers
-
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
@@ -132,5 +127,38 @@ void append_gantt_entry(SchedulerState *state, const char *entry);
  * Prints a formatted ASCII timeline showing process execution.
  */
 void render_gantt_chart(SchedulerState *state);
+
+/**
+ * Cleanup and Memory Management Helpers (Phase 7)
+ * 
+ * The cleanup suite ensures proper deallocation of all resources allocated
+ * during simulation. These functions follow a strict ownership model:
+ * - The Process array is externally owned (allocated by parser)
+ * - The gantt_log is owned by SchedulerMetrics
+ * - The policy_state is owned by individual policy implementations
+ */
+
+/**
+ * Cleans up the Gantt chart log memory.
+ * Safe to call even if gantt_log is NULL.
+ */
+void cleanup_gantt_log(SchedulerState *state);
+
+/**
+ * Cleans up all resources owned by the SchedulerState, including
+ * the Gantt chart log. Does NOT free the Process array, as it is
+ * externally owned by the caller.
+ * Safe to call multiple times or with partially initialized state.
+ */
+void cleanup_scheduler_state(SchedulerState *state);
+
+/**
+ * Comprehensive cleanup function that handles both the SchedulerState
+ * and an optional Process array. This is the recommended cleanup path
+ * for most use cases.
+ * 
+ * Usage: cleanup_simulation(state, procs) after run_simulation() completes.
+ */
+void cleanup_simulation(SchedulerState *state, Process *procs);
 
 #endif // SCHEDULER_H
