@@ -43,7 +43,7 @@ void print_metrics_table(Process *procs, int num_procs) {
         Process *p = &procs[i];
         // Identify convoy effect (long job blocking a short job)
         if (p->waiting_time > 100 && p->waiting_time > p->burst_time) {
-            printf("\nConvoy effect detected: Process %s waited %d time units\n", p->pid, p->waiting_time);
+            fprintf(stderr, "\nConvoy effect detected: Process %s waited %d time units\n", p->pid, p->waiting_time);
             break;
         }
     }
