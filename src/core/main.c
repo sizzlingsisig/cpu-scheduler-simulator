@@ -11,8 +11,6 @@
 // Forward declaration
 static Process *load_processes(const Args *args, int *num_procs);
 
-// TODO: Phase 3/4/5 - Simulation loop and algorithm selection
-
 /**
  * Structure to hold comparison results for each algorithm
  */

@@ -83,8 +83,8 @@ run_test() {
             echo -e "${GREEN}PASS${NC}"
             ((PASSED++))
         else
-            echo -e "${YELLOW}WARN${NC} (output differs)"
-            ((PASSED++))
+            echo -e "${RED}FAIL${NC} (output differs)"
+            ((FAILED++))
         fi
     else
         echo -e "${GREEN}PASS${NC}"

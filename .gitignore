@@ -30,3 +30,6 @@ Thumbs.db
 
 # Ignore binaries in obj/
 obj/
+
+# Ignore defense script doc
+docs/defense_script.md
