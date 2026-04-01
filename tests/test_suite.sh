@@ -31,14 +31,13 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}PASSED${NC}"
 
-# Generate expected outputs
-echo -n "[2/4] Generating expected outputs... "
+# Ensure static expected baseline exists
+echo -n "[2/4] Validating expected baselines... "
 for algo in FCFS SJF STCF RR MLFQ; do
-    case $algo in
-        RR) quantum="--quantum=30" ;;
-        *)  quantum="" ;;
-    esac
-    ./schedsim --algorithm=$algo $quantum --input=$TEST_DIR/workloads/quiz3.txt > $TEST_DIR/expected/quiz3_$algo.txt 2>&1
+  if [ ! -f "$TEST_DIR/expected/quiz3_${algo}.txt" ]; then
+    echo -e "${RED}Missing expected file: $TEST_DIR/expected/quiz3_${algo}.txt${NC}"
+    exit 1
+  fi
 done
 echo -e "${GREEN}DONE${NC}"
 
