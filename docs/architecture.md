@@ -56,7 +56,11 @@ typedef struct {
     int start_time;       // First time CPU was acquired (used for RT)
     int finish_time;      // Time of completion (used for TT)
     int priority;         // Current MLFQ queue level
-    int time_in_queue;    // Allotment tracking for MLFQ
+    int allotment_used;   // Time used in current queue quantum/allotment
+    int turnaround_time;  // Computed at completion
+    int waiting_time;     // Computed at completion
+    int response_time;    // Computed at first CPU dispatch
+    ProcessState state;   // Lifecycle state tracking
 } Process;
 ```
 
@@ -66,13 +70,13 @@ Encapsulates all state for a single simulation run.
 
 ```c
 typedef struct {
-    Process *processes;
-    int num_processes;
-    int current_time;
-    int context_switches;
-    char *gantt_log;      // Buffer storing PID sequence for Gantt rendering
+    SchedulerConfig config;
+    SchedulerEngine engine;
+    SchedulerMetrics metrics;
+    void *policy_state;
 } SchedulerState;
 ```
+
 
 ---
 
