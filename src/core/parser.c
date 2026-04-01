@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <errno.h>
+#include <limits.h>
 #include "parser.h"
 
 /**
@@ -50,9 +52,17 @@ int parse_args(int argc, char *argv[], Args *args) {
             case OPT_INPUT:
                 args->input_file = strdup(optarg);
                 break;
-            case OPT_QUANTUM:
-                args->quantum = atoi(optarg);
+            case OPT_QUANTUM: {
+                char *endptr;
+                errno = 0;
+                long val = strtol(optarg, &endptr, 10);
+                if (errno == ERANGE || endptr == optarg || *endptr != '\0' || val <= 0 || val > INT_MAX) {
+                    fprintf(stderr, "Invalid quantum value: %s. Must be a positive integer within range.\n", optarg);
+                    return 1;
+                }
+                args->quantum = (int)val;
                 break;
+            }
             case OPT_COMPARE:
                 args->compare_mode = 1;
                 break;
@@ -111,14 +121,42 @@ void parse_mlfq_config(const char *config_str, MLFQConfig *config) {
             char *quantum_tok = strtok(NULL, " \t\n\r");
             char *allot_tok = strtok(NULL, " \t\n\r");
             if (quantum_tok && allot_tok) {
-                config->quantums[queue_idx] = atoi(quantum_tok);
-                config->allotments[queue_idx] = atoi(allot_tok);
+                {
+                    char *endptr;
+                    errno = 0;
+                    long val = strtol(quantum_tok, &endptr, 10);
+                    if (errno == ERANGE || endptr == quantum_tok || *endptr != '\0' || val <= 0 || val > INT_MAX) {
+                        fprintf(stderr, "Invalid quantum value in MLFQ config: %s. Must be a positive integer.\n", quantum_tok);
+                        fclose(fp);
+                        exit(1);
+                    }
+                    config->quantums[queue_idx] = (int)val;
+                }
+                {
+                    char *endptr;
+                    errno = 0;
+                    long val = strtol(allot_tok, &endptr, 10);
+                    if (errno == ERANGE || endptr == allot_tok || *endptr != '\0' || val <= 0 || val > INT_MAX) {
+                        fprintf(stderr, "Invalid allotment value in MLFQ config: %s. Must be a positive integer.\n", allot_tok);
+                        fclose(fp);
+                        exit(1);
+                    }
+                    config->allotments[queue_idx] = (int)val;
+                }
                 queue_idx++;
             }
         } else if (strcmp(token, "BOOST_PERIOD") == 0) {
             char *boost_tok = strtok(NULL, " \t\n\r");
             if (boost_tok) {
-                config->boost_period = atoi(boost_tok);
+                char *endptr;
+                errno = 0;
+                long val = strtol(boost_tok, &endptr, 10);
+                if (errno == ERANGE || endptr == boost_tok || *endptr != '\0' || val <= 0 || val > INT_MAX) {
+                    fprintf(stderr, "Invalid boost period value in MLFQ config: %s. Must be a positive integer.\n", boost_tok);
+                    fclose(fp);
+                    exit(1);
+                }
+                config->boost_period = (int)val;
             }
         }
     }
