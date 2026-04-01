@@ -1,5 +1,6 @@
 #include "queue.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 /**
  * Ensures the queue starts in a predictable, empty state to prevent 
@@ -18,6 +19,10 @@ void queue_init(Queue *q) {
  */
 void enqueue(Queue *q, Process *p) {
     QueueNode *node = malloc(sizeof(QueueNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in enqueue\n");
+        exit(1);
+    }
     node->process = p;
     node->next = NULL;
     
