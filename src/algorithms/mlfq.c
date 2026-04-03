@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /**
  * MLFQ Queue Node
@@ -36,6 +37,10 @@ typedef struct {
 // Queue Helpers
 static void enqueue(MLFQQueue *q, Process *p) {
     MLFQNode *node = malloc(sizeof(MLFQNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in enqueue\n");
+        exit(1);
+    }
     node->process = p;
     node->next = NULL;
     if (q->tail == NULL) {
@@ -61,6 +66,10 @@ static Process* dequeue(MLFQQueue *q) {
 
 static void mlfq_on_init(SchedulerState *state) {
     MLFQState *mlfq = malloc(sizeof(MLFQState));
+    if (!mlfq) {
+        fprintf(stderr, "Memory allocation failed in mlfq_on_init\n");
+        exit(1);
+    }
     MLFQConfig *config = &state->config.mlfq_config;
     
     mlfq->num_queues = config->num_queues;
@@ -69,6 +78,10 @@ static void mlfq_on_init(SchedulerState *state) {
     mlfq->current_quantum = 0;
     
     mlfq->queues = malloc(sizeof(MLFQQueue) * mlfq->num_queues);
+    if (!mlfq->queues) {
+        fprintf(stderr, "Memory allocation failed in mlfq_on_init\n");
+        exit(1);
+    }
     for (int i = 0; i < mlfq->num_queues; i++) {
         mlfq->queues[i].head = NULL;
         mlfq->queues[i].tail = NULL;

@@ -77,6 +77,10 @@ Process* parse_workload_string(const char* input, int* count) {
     *count = count_processes(input);
 
     Process* procs = malloc(sizeof(Process) * (*count));
+    if (!procs) {
+        fprintf(stderr, "Memory allocation failed in parse_workload_string\n");
+        exit(1);
+    }
     char* data = strdup(input);
 
     int i = 0;

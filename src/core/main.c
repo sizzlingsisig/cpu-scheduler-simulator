@@ -29,8 +29,18 @@ static CompareResult run_algorithm(const Args *args, Process *procs, int num_pro
     CompareResult result;
     strncpy(result.algorithm, algorithm_name, sizeof(result.algorithm) - 1);
 
+    // Deep-copy processes to ensure each algorithm starts with clean state
+    Process *procs_copy = malloc(num_procs * sizeof(Process));
+    if (!procs_copy) {
+        fprintf(stderr, "Memory allocation failed in run_algorithm\n");
+        result.avg_tt = result.avg_wt = result.avg_rt = -1;
+        result.context_switches = -1;
+        return result;
+    }
+    memcpy(procs_copy, procs, num_procs * sizeof(Process));
+
     SchedulerState state;
-    init_scheduler_state(&state, procs, num_procs);
+    init_scheduler_state(&state, procs_copy, num_procs);
     state.config.quantum = args->quantum;
     parse_mlfq_config(args->mlfq_config, &state.config.mlfq_config);
 
@@ -48,15 +58,16 @@ static CompareResult run_algorithm(const Args *args, Process *procs, int num_pro
         fprintf(stderr, "Unknown algorithm: %s\n", algorithm_name);
         result.avg_tt = result.avg_wt = result.avg_rt = -1;
         result.context_switches = -1;
+        free(procs_copy);
         return result;
     }
 
     // Calculate averages
     int total_tt = 0, total_wt = 0, total_rt = 0;
     for (int i = 0; i < num_procs; i++) {
-        total_tt += procs[i].turnaround_time;
-        total_wt += procs[i].waiting_time;
-        total_rt += procs[i].response_time;
+        total_tt += procs_copy[i].turnaround_time;
+        total_wt += procs_copy[i].waiting_time;
+        total_rt += procs_copy[i].response_time;
     }
 
     result.avg_tt = (float)total_tt / num_procs;
@@ -65,6 +76,7 @@ static CompareResult run_algorithm(const Args *args, Process *procs, int num_pro
     result.context_switches = state.metrics.context_switches;
 
     cleanup_scheduler_state(&state);
+    free(procs_copy);
     return result;
 }
 
